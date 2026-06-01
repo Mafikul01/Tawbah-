@@ -129,13 +129,25 @@ function App() {
         return;
       }
 
+      const isRootAdmin = emailForm.toLowerCase() === "tawbah.rehabcenter@gmail.com";
+
       try {
         if (isSignUp) {
           await createUserWithEmailAndPassword(auth, emailForm, passwordForm);
           setAuthFeedback(t("Account created successfully! Logging you in...", "অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে! সিস্টেমে প্রবেশ করা হচ্ছে..."));
         } else {
-          await signInWithEmailAndPassword(auth, emailForm, passwordForm);
-          setAuthFeedback(t("Successfully signed in!", "সফলভাবে সাইন-ইন করা হয়েছে!"));
+          try {
+            await signInWithEmailAndPassword(auth, emailForm, passwordForm);
+            setAuthFeedback(t("Successfully signed in!", "সফলভাবে সাইন-ইন করা হয়েছে!"));
+          } catch (innerError: any) {
+            // Auto register the root admin on discovery if they provide our requested default setup password
+            if (isRootAdmin && passwordForm === "TawbahAdmin2026!" && (innerError.code === "auth/user-not-found" || innerError.code === "auth/invalid-credential")) {
+              await createUserWithEmailAndPassword(auth, emailForm, passwordForm);
+              setAuthFeedback(t("One-time Administrator account activated and signed in successfully!", "মূল অ্যাডমিন অ্যাকাউন্ট সফলভাবে অ্যাক্টিভেট ও সাইন-ইন করা হয়েছে!"));
+            } else {
+              throw innerError;
+            }
+          }
         }
       } catch (error: any) {
         console.error("Email login failed", error);
@@ -144,12 +156,12 @@ function App() {
           errorMsg = t("This email is already registered. Please sign in instead.", "এই ইমেইলটি ইতিপূর্বে নিবন্ধিত হয়েছে। অনুগ্রহ করে সাইন-ইন করুন।");
         } else if (error.code === "auth/wrong-password") {
           errorMsg = t("Incorrect password. Please try again.", "ভুল পাসওয়ার্ড। আবার চেষ্টা করুন।");
-        } else if (error.code === "auth/user-not-found") {
-          errorMsg = t("No account found with this email. Click register below to sign up.", "এই ইমেইলে কোনো অ্যাকাউন্ট পাওয়া যায়নি। নিচে রেজিস্টারে ক্লিক করে নতুন অ্যাকাউন্ট খুলুন।");
+        } else if (error.code === "auth/user-not-found" || error.code === "auth/invalid-credential") {
+          errorMsg = t("Incorrect password or user not found. For first-time administrator login, enter the direct password provided.", "ভুল পাসওয়ার্ড বা ব্যবহারকারী পাওয়া যায়নি। প্রথমবার অ্যাডমিন লগইনের জন্য নির্ধারিত পাসওয়ার্ডটি ব্যবহার করুন।");
         } else if (error.code === "auth/weak-password") {
           errorMsg = t("Password should be at least 6 characters.", "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।");
-        } else if (error.code === "auth/invalid-email" || error.code === "auth/invalid-credential") {
-          errorMsg = t("Invalid email credentials. Please check your spelling.", "ভুল ইমেইল বা পাসওয়ার্ড। দয়া করে বানান চেক করুন।");
+        } else if (error.code === "auth/invalid-email") {
+          errorMsg = t("Invalid email formatted username. Please check spelling.", "ভুল ইমেইল ফরম্যাট। দয়া করে বানান চেক করুন।");
         }
         setAuthError(errorMsg);
       }
@@ -323,10 +335,10 @@ function App() {
                 )}
               </p>
               <p className="bg-amber-100/50 p-2 rounded border border-amber-200/50">
-                <strong>{t("Admin Access Instructions", "অ্যাডমিন প্রবেশ তথ্য")}:</strong> <br />
+                <strong>{t("Admin One-Time Password Access", "অ্যাডমিন ওয়ান-টাইম পাসওয়ার্ড")}:</strong> <br />
                 {t(
-                  "Toggle to 'Sign Up / Register' to register with email 'tawbah.rehabcenter@gmail.com' and pick any password. Once registered, this account grants default Admin credentials automatically!",
-                  "ইমেইল ট্যাবটিকে 'Sign Up / Register' মোডে নিয়ে 'tawbah.rehabcenter@gmail.com' ইমেইল ও একটি পাসওয়ার্ড দিয়ে রেজিস্ট্রেশন সম্পন্ন করুন। এই ইমেইলটি ডিফল্ট অ্যাডমিন এক্সেস পাবে।"
+                  "Simply enter the email 'tawbah.rehabcenter@gmail.com' and type the one-time setup password 'TawbahAdmin2026!' above to register and sign in instantly. This account grants default Admin credentials automatically!",
+                  "সহজেই উপরে ইমেইল 'tawbah.rehabcenter@gmail.com' এবং ওয়ান-টাইম সেটআপ পাসওয়ার্ড 'TawbahAdmin2026!' টাইপ করে সরাসরি সাইন-ইন করুন। এটি স্বয়ংক্রিয়ভাবে মূল অ্যাডমিন অ্যাক্সেস প্রদান করবে।"
                 )}
               </p>
             </div>
