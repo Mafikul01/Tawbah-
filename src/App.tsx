@@ -41,13 +41,16 @@ import Staff from "./pages/Staff";
 import Volunteers from "./pages/Volunteers";
 import AdminSettings from "./pages/AdminSettings";
 
+// Set this to false to restore and re-enable the normal login system later.
+const BYPASS_LOGIN_SYSTEM = true;
+
 function App() {
   const [user, setUser] = useState(auth.currentUser);
   const [bypassUser, setBypassUser] = useState<{ email: string } | null>(() => {
     const saved = localStorage.getItem("tawbah_bypass_admin");
     return saved ? JSON.parse(saved) : null;
   });
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(BYPASS_LOGIN_SYSTEM);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { lang, setLang, t } = useLanguage();
@@ -61,7 +64,9 @@ function App() {
   const [authFeedback, setAuthFeedback] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const effectiveUser = user || bypassUser;
+  const effectiveUser = BYPASS_LOGIN_SYSTEM
+    ? { email: "tawbah.rehabcenter@gmail.com", displayName: "Tawbah Admin" }
+    : (user || bypassUser);
 
   useEffect(() => {
     // Process the redirect result on mount if available
@@ -82,6 +87,10 @@ function App() {
 
   useEffect(() => {
     const checkAdminStatus = async () => {
+      if (BYPASS_LOGIN_SYSTEM) {
+        setIsAdmin(true);
+        return;
+      }
       if (effectiveUser && effectiveUser.email) {
         const emailLower = effectiveUser.email.toLowerCase();
         if (emailLower === "pi969043@gmail.com" || emailLower === "tawbah.rehabcenter@gmail.com" || emailLower === "admin") {
@@ -524,17 +533,19 @@ function App() {
                   <p className="text-xs text-slate-500 truncate max-w-[100px]" title={effectiveUser?.email || ''}>{effectiveUser?.email}</p>
                 </div>
               </div>
-              <button
-                onClick={async () => {
-                  setBypassUser(null);
-                  localStorage.removeItem("tawbah_bypass_admin");
-                  await signOut(auth);
-                }}
-                className="text-slate-500 hover:text-white transition p-2 cursor-pointer"
-                title="Log Out"
-              >
-                <LogOut size={18} />
-              </button>
+              {!BYPASS_LOGIN_SYSTEM && (
+                <button
+                  onClick={async () => {
+                    setBypassUser(null);
+                    localStorage.removeItem("tawbah_bypass_admin");
+                    await signOut(auth);
+                  }}
+                  className="text-slate-500 hover:text-white transition p-2 cursor-pointer"
+                  title="Log Out"
+                >
+                  <LogOut size={18} />
+                </button>
+              )}
             </div>
         </aside>
 
