@@ -72,7 +72,7 @@ export default function AdminSettings() {
           <div className="p-4 bg-blue-50/50 border-b border-blue-100 flex items-center text-blue-800 text-sm">
             <Key size={16} className="mr-2 shrink-0" />
             <span className="font-medium">
-              {t("The root admin (pi969043@gmail.com) always has access and is not listed here unless explicitly added. Users listed here have full administrative privileges.", "মূল অ্যাডমিনের (pi969043@gmail.com) সর্বদা অ্যাক্সেস থাকে এবং স্পষ্টভাবে যোগ না করা পর্যন্ত এখানে তালিকাভুক্ত করা হয় না। এখানে তালিকাভুক্ত ব্যবহারকারীদের সম্পূর্ণ প্রশাসনিক সুবিধা রয়েছে।")}
+              {t("Root administrators (tawbah.rehabcenter@gmail.com, pi969043@gmail.com) always have full access and are not listed here. Additional users listed below have been granted administrative privileges.", "মূল অ্যাডমিনদের (tawbah.rehabcenter@gmail.com, pi969043@gmail.com) সর্বদা সম্পূর্ণ অ্যাক্সেস থাকে। নিচে যুক্ত করা ব্যবহারকারীদের অতিরিক্ত প্রশাসনিক সুবিধা দেওয়া হয়েছে।")}
             </span>
           </div>
           <div className="overflow-x-auto">
