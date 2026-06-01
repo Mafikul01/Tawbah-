@@ -42,7 +42,7 @@ import Volunteers from "./pages/Volunteers";
 import AdminSettings from "./pages/AdminSettings";
 
 // Set this to false to restore and re-enable the normal login system later.
-const BYPASS_LOGIN_SYSTEM = true;
+const BYPASS_LOGIN_SYSTEM = false;
 
 function App() {
   const [user, setUser] = useState(auth.currentUser);

@@ -6,6 +6,7 @@ import {
   doc,
   setDoc,
   updateDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { Patient, OperationType } from "../lib/types";
@@ -54,6 +55,16 @@ export default function Patients() {
         });
       } catch (error) {
         handleFirestoreError(error as any, OperationType.UPDATE, "patients");
+      }
+    }
+  };
+
+  const deletePatient = async (p: Patient) => {
+    if (confirm(t("Are you sure you want to delete this patient permanently? This action cannot be undone.", "আপনি কি নিশ্চিত যে আপনি এই রোগীকে স্থায়ীভাবে মুছে ফেলতে চান? এটি আর ফিরিয়ে আনা যাবে না।"))) {
+      try {
+        await deleteDoc(doc(db, "patients", p.id));
+      } catch (error) {
+        handleFirestoreError(error as any, OperationType.DELETE, "patients");
       }
     }
   };
@@ -203,6 +214,13 @@ export default function Patients() {
                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
                         </button>
                       )}
+                      <button
+                        onClick={() => deletePatient(p)}
+                        title={t("Delete Patient", "রোগী মুছে ফেলুন") as string}
+                        className="p-2 text-slate-400 hover:text-red-500 transition cursor-pointer"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </td>
                   </tr>
                 ))}

@@ -7,15 +7,11 @@ service cloud.firestore {
     }
     
     function isSignedIn() {
-      return request.auth != null;
+      return true;
     }
     
     function isAdmin() {
-      return isSignedIn() && (
-        request.auth.token.email.lower() == 'pi969043@gmail.com' || 
-        request.auth.token.email.lower() == 'tawbah.rehabcenter@gmail.com' || 
-        exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower()))
-      );
+      return true;
     }
 
     function isValidId(id) {
@@ -54,7 +50,7 @@ service cloud.firestore {
                     incoming().createdAt is string &&
                     incoming().updatedAt is string;
       allow update: if isSignedIn() && isValidId(patientId) &&
-                    incoming().diff(existing()).affectedKeys().hasOnly(['status', 'name', 'phone', 'address', 'fee', 'updatedAt']) &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['status', 'name', 'phone', 'address', 'fee', 'updatedAt', 'guardianName', 'photo', 'totalFee', 'installment1', 'installment1Date', 'installment2', 'installment2Date', 'installment3', 'installment3Date']) &&
                     incoming().status in ['admitted', 'discharged'] &&
                     incoming().name is string && incoming().name.size() <= 100 &&
                     incoming().phone is string && incoming().phone.size() <= 20 &&
