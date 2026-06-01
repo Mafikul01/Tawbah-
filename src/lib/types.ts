@@ -4,7 +4,16 @@ export interface Patient {
   name: string;
   phone: string;
   address: string;
-  fee: number;
+  guardianName?: string;
+  photo?: string;
+  fee: number; // backward compatibility, might treat as paid or total
+  totalFee?: number;
+  installment1?: number;
+  installment1Date?: string;
+  installment2?: number;
+  installment2Date?: string;
+  installment3?: number;
+  installment3Date?: string;
   createdAt: string;
   updatedAt: string;
 }

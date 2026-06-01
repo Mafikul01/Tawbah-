@@ -95,7 +95,8 @@ function App() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
         <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-sm border border-slate-200 text-center">
-          <h1 className="text-2xl font-bold text-slate-900 mb-6 font-sans">
+          <img src="https://i.imgur.com/xcvaY6b.png" alt="Tawbah Rehab Center" className="w-24 h-24 mx-auto mb-4 object-contain" />
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900 mb-6 font-sans">
             {t("Tawbah Rehab Center System", "তাওবাহ রিহ্যাব সেন্টার সিস্টেম")}
           </h1>
           <p className="text-slate-600 mb-8 font-sans">
@@ -107,11 +108,6 @@ function App() {
           >
             {t("Sign in with Google", "গুগল দিয়ে সাইন ইন করুন")}
           </button>
-          <div className="mt-6 flex justify-center space-x-4 text-sm text-slate-500">
-            <button onClick={() => setLang('en')} className={`hover:text-slate-900 ${lang === 'en' ? 'font-bold text-slate-900' : ''}`}>EN</button>
-            <button onClick={() => setLang('bn')} className={`hover:text-slate-900 ${lang === 'bn' ? 'font-bold text-slate-900' : ''}`}>BN</button>
-            <button onClick={() => setLang('both')} className={`hover:text-slate-900 ${lang === 'both' ? 'font-bold text-slate-900' : ''}`}>Both</button>
-          </div>
         </div>
       </div>
     );
@@ -132,7 +128,7 @@ function App() {
         <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white flex flex-col transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-200 ease-in-out`}>
           <div className="p-6 border-b border-slate-800 flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-500 rounded-sm flex items-center justify-center font-bold text-xl">T</div>
+              <img src="https://i.imgur.com/xcvaY6b.png" alt="Tawbah Rehab Center" className="w-10 h-10 object-contain rounded-sm bg-white" />
               <span className="font-bold tracking-tight text-lg">{t("Tawbah Rehab Center", "তাওবাহ রিহ্যাব সেন্টার")}</span>
             </div>
             <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-white">
@@ -186,16 +182,21 @@ function App() {
               </>
             )}
           </nav>
-          <div className="p-4 border-t border-slate-800 space-y-4">
-            <div className="flex items-center justify-center space-x-2 text-xs text-slate-400 bg-slate-800/50 p-2 rounded-lg">
-               <Languages size={14} />
-               <button onClick={() => setLang('en')} className={`hover:text-white px-1 ${lang === 'en' ? 'text-white font-bold' : ''}`}>EN</button>
-               <span>|</span>
-               <button onClick={() => setLang('bn')} className={`hover:text-white px-1 ${lang === 'bn' ? 'text-white font-bold' : ''}`}>BN</button>
-               <span>|</span>
-               <button onClick={() => setLang('both')} className={`hover:text-white px-1 ${lang === 'both' ? 'text-white font-bold' : ''}`}>Both</button>
+          <div className="px-6 py-4 border-t border-slate-800">
+            <div className="flex items-center gap-2 mb-1.5 text-slate-400">
+              <Languages size={14} />
+              <span className="text-[10px] font-bold uppercase tracking-wider">{t("System Language", "সিস্টেম ভাষা")}</span>
             </div>
-            <div className="flex items-center justify-between px-2">
+            <select
+              value={lang}
+              onChange={(e) => setLang(e.target.value as any)}
+              className="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded-md py-1.5 px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 transition cursor-pointer"
+            >
+              <option value="bn">বাংলা (Bengali)</option>
+              <option value="en">English (ইংরেজি)</option>
+            </select>
+          </div>
+          <div className="p-4 border-t border-slate-800 flex items-center justify-between px-2">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center border border-slate-600 font-medium">
                   {user.email?.substring(0, 2).toUpperCase() || 'AD'}
@@ -213,15 +214,14 @@ function App() {
                 <LogOut size={18} />
               </button>
             </div>
-          </div>
         </aside>
 
         <main className="flex-1 flex flex-col overflow-hidden relative">
           <button 
-            className="lg:hidden absolute top-4 left-4 z-30 p-2 bg-white rounded-md shadow-sm border border-slate-200 text-slate-700" 
+            className="lg:hidden absolute top-3 left-3 md:top-5 md:left-4 z-40 p-1.5 bg-white rounded-md shadow-sm border border-slate-200 text-slate-700 hover:bg-slate-50 transition" 
             onClick={() => setSidebarOpen(true)}
           >
-            <Menu size={24} />
+            <Menu size={22} />
           </button>
           <div className="flex-1 overflow-auto">
             <Routes>
