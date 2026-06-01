@@ -29,25 +29,25 @@ export default function Finances() {
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0">
-        <h1 className="text-2xl font-bold text-slate-800">{t("Financial Logs", "আর্থিক লগ")}</h1>
+      <header className="h-16 md:h-20 bg-white border-b border-slate-200 flex items-center justify-between pl-14 pr-4 md:px-8 shrink-0">
+        <h1 className="text-xl md:text-2xl font-bold text-slate-800">{t("Financial Logs", "আর্থিক লগ")}</h1>
         <div className="flex items-center gap-4">
           <button
             onClick={() => setIsModalOpen(true)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-semibold flex items-center gap-2 transition"
           >
-            <Plus size={16} /> {t("Add Record", "রেকর্ড যোগ করুন")}
+            <Plus size={16} /> <span className="hidden sm:inline">{t("Add Record", "রেকর্ড যোগ করুন")}</span>
           </button>
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-8">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col max-w-7xl mx-auto">
           <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
             <h3 className="font-bold text-slate-700">{t("Recent Transactions", "সাম্প্রতিক লেনদেন")}</h3>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse whitespace-nowrap">
               <thead className="bg-slate-50 text-slate-400 text-xs uppercase tracking-wider">
                 <tr>
                   <th className="px-6 py-3 font-semibold">
@@ -76,7 +76,7 @@ export default function Finances() {
                       >
                         <Tag size={12} />
                         <span>
-                          {r.type === 'income' ? t('Income', 'আয়') : r.type === 'clinic_expense' ? t('Clinic Expense', 'ক্লিনিক খরচ') : t('Market Expense', 'বাজার খরচ')}
+                          {r.type === 'income' ? t('Income', 'আয়') : r.type === 'clinic_expense' ? t('Center Expense', 'সেন্টার খরচ') : t('Market Expense', 'বাজার খরচ')}
                         </span>
                       </span>
                     </td>
@@ -174,7 +174,7 @@ function FinanceModal({ onClose }: { onClose: () => void }) {
               className="w-full p-2.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm text-slate-700 bg-slate-50 focus:bg-white"
             >
               <option value="income">{t("Income", "আয়")}</option>
-              <option value="clinic_expense">{t("Clinic Expense", "ক্লিনিক খরচ")}</option>
+              <option value="clinic_expense">{t("Center Expense", "সেন্টার খরচ")}</option>
               <option value="market_expense">{t("Market Expense", "বাজার খরচ")}</option>
             </select>
           </div>

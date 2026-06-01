@@ -49,28 +49,28 @@ export default function Volunteers() {
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0">
-        <h1 className="text-2xl font-bold text-slate-800 flex items-center">
+      <header className="h-16 md:h-20 bg-white border-b border-slate-200 flex items-center justify-between pl-14 pr-4 md:px-8 shrink-0">
+        <h1 className="text-xl md:text-2xl font-bold text-slate-800 flex items-center">
           {t("Volunteers", "স্বেচ্ছাসেবক")}
-          <Heart className="ml-3 text-red-500" size={18} />
+          <Heart className="ml-2 md:ml-3 text-red-500" size={18} />
         </h1>
         <div className="flex items-center gap-4">
           <button
             onClick={openNewModal}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-semibold flex items-center gap-2 transition"
           >
-            <Plus size={16} /> {t("Add Volunteer", "স্বেচ্ছাসেবক যোগ করুন")}
+            <Plus size={16} /> <span className="hidden sm:inline">{t("Add Volunteer", "স্বেচ্ছাসেবক যোগ করুন")}</span>
           </button>
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-8">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col max-w-7xl mx-auto">
           <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
              <h3 className="font-bold text-slate-700">{t("Volunteer Roster", "স্বেচ্ছাসেবক তালিকা")}</h3>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse whitespace-nowrap">
               <thead className="bg-slate-50 text-slate-400 text-xs uppercase tracking-wider">
                 <tr>
                   <th className="px-6 py-3 font-semibold">
