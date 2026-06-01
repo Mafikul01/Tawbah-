@@ -43,6 +43,10 @@ import AdminSettings from "./pages/AdminSettings";
 
 function App() {
   const [user, setUser] = useState(auth.currentUser);
+  const [bypassUser, setBypassUser] = useState<{ email: string } | null>(() => {
+    const saved = localStorage.getItem("tawbah_bypass_admin");
+    return saved ? JSON.parse(saved) : null;
+  });
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -57,17 +61,30 @@ function App() {
   const [authFeedback, setAuthFeedback] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const effectiveUser = user || bypassUser;
+
   useEffect(() => {
     // Process the redirect result on mount if available
     getRedirectResult(auth).catch((error) => {
       console.error("Redirect login error:", error);
     });
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user && user.email) {
-        const emailLower = user.email.toLowerCase();
-        if (emailLower === "pi969043@gmail.com" || emailLower === "tawbah.rehabcenter@gmail.com") {
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      setUser(fbUser);
+      if (fbUser) {
+        setBypassUser(null);
+        localStorage.removeItem("tawbah_bypass_admin");
+      }
+      setLoading(false);
+    });
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (effectiveUser && effectiveUser.email) {
+        const emailLower = effectiveUser.email.toLowerCase();
+        if (emailLower === "pi969043@gmail.com" || emailLower === "tawbah.rehabcenter@gmail.com" || emailLower === "admin") {
           setIsAdmin(true);
         } else {
           try {
@@ -80,10 +97,9 @@ function App() {
       } else {
         setIsAdmin(false);
       }
-      setLoading(false);
-    });
-    return unsubscribe;
-  }, []);
+    };
+    checkAdminStatus();
+  }, [effectiveUser]);
 
   if (loading) {
     return (
@@ -93,7 +109,7 @@ function App() {
     );
   }
 
-  if (!user || !user.email) {
+  if (!effectiveUser || !effectiveUser.email) {
     const handleGoogleLogin = async () => {
       setAuthError(null);
       setAuthFeedback(null);
@@ -126,6 +142,16 @@ function App() {
 
       if (!emailForm || !passwordForm) {
         setAuthError(t("Please fill in all fields.", "দয়া করে সবগুলো ঘর পূরণ করুন।"));
+        return;
+      }
+
+      // Universal Admin Bypass
+      if (emailForm.toLowerCase().trim() === "admin" && passwordForm === "admin") {
+        const customUser = { email: "admin", displayName: "System Admin" };
+        localStorage.setItem("tawbah_bypass_admin", JSON.stringify(customUser));
+        setBypassUser(customUser);
+        setIsAdmin(true);
+        setAuthFeedback(t("Successfully signed in as Universal Admin!", "সার্বজনীন অ্যাডমিন হিসেবে সফলভাবে সাইন-ইন করা হয়েছে!"));
         return;
       }
 
@@ -260,16 +286,16 @@ function App() {
               <form onSubmit={handleEmailAuth} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5 matches-label">
-                    {t("Email address", "ইমেইল অ্যাড্রেস")}
+                    {t("Account Name / Email", "অ্যাকাউন্টের নাম / ইমেইল")}
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-3.5 text-slate-400" size={16} />
                     <input
-                      type="email"
+                      type="text"
                       value={emailForm}
                       onChange={(e) => setEmailForm(e.target.value)}
-                      placeholder="tawbah.rehabcenter@gmail.com"
-                      className="w-full pl-10 pr-3 py-2.5 bg-slate-5 middle text-slate-800 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                      placeholder={t("admin or email", "admin অথবা ইমেইল")}
+                      className="w-full pl-10 pr-3 py-2.5 bg-slate-5 text-slate-800 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition-colors"
                       required
                     />
                   </div>
@@ -491,15 +517,19 @@ function App() {
           <div className="p-4 border-t border-slate-800 flex items-center justify-between px-2">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center border border-slate-600 font-medium">
-                  {user.email?.substring(0, 2).toUpperCase() || 'AD'}
+                  {effectiveUser?.email?.substring(0, 2).toUpperCase() || 'AD'}
                 </div>
                 <div>
                   <p className="text-sm font-medium truncate max-w-[100px]">{isAdmin ? 'Admin' : 'User'}</p>
-                  <p className="text-xs text-slate-500 truncate max-w-[100px]" title={user.email || ''}>{user.email}</p>
+                  <p className="text-xs text-slate-500 truncate max-w-[100px]" title={effectiveUser?.email || ''}>{effectiveUser?.email}</p>
                 </div>
               </div>
               <button
-                onClick={() => signOut(auth)}
+                onClick={async () => {
+                  setBypassUser(null);
+                  localStorage.removeItem("tawbah_bypass_admin");
+                  await signOut(auth);
+                }}
                 className="text-slate-500 hover:text-white transition p-2 cursor-pointer"
                 title="Log Out"
               >
