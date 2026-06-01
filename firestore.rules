@@ -1,0 +1,118 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email.lower() == 'pi969043@gmail.com' || 
+        exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower()))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-.@]+$');
+    }
+    
+    function incoming() {
+      return request.resource.data;
+    }
+    
+    function existing() {
+      return resource.data;
+    }
+
+    // Admins
+    match /admins/{adminId} {
+      allow read: if isSignedIn(); // Allow reading so UI can know who is admin
+      allow create: if isAdmin() && isValidId(adminId) &&
+                    incoming().keys().hasAll(['email', 'createdAt']) &&
+                    incoming().keys().size() == 2 &&
+                    incoming().email is string && incoming().email.size() <= 100 &&
+                    incoming().createdAt is string;
+      allow delete: if isAdmin() && isValidId(adminId);
+    }
+    
+    // Patients
+    match /patients/{patientId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(patientId) &&
+                    incoming().keys().hasAll(['status', 'name', 'phone', 'address', 'fee', 'createdAt', 'updatedAt']) &&
+                    incoming().status in ['admitted', 'discharged'] &&
+                    incoming().name is string && incoming().name.size() <= 100 &&
+                    incoming().phone is string && incoming().phone.size() <= 20 &&
+                    incoming().address is string && incoming().address.size() <= 200 &&
+                    incoming().fee is number &&
+                    incoming().createdAt is string &&
+                    incoming().updatedAt is string;
+      allow update: if isSignedIn() && isValidId(patientId) &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['status', 'name', 'phone', 'address', 'fee', 'updatedAt']) &&
+                    incoming().status in ['admitted', 'discharged'] &&
+                    incoming().name is string && incoming().name.size() <= 100 &&
+                    incoming().phone is string && incoming().phone.size() <= 20 &&
+                    incoming().address is string && incoming().address.size() <= 200 &&
+                    incoming().fee is number &&
+                    incoming().updatedAt is string;
+      allow delete: if isAdmin() && isValidId(patientId);
+    }
+
+    // Finances
+    match /finances/{recordId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(recordId) &&
+                    incoming().keys().hasAll(['type', 'amount', 'description', 'createdAt']) &&
+                    incoming().type in ['income', 'clinic_expense', 'market_expense'] &&
+                    incoming().amount is number &&
+                    incoming().description is string && incoming().description.size() <= 200 &&
+                    incoming().createdAt is string;
+      allow delete: if isAdmin() && isValidId(recordId);
+    }
+
+    // Staff
+    match /staff/{staffId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin() && isValidId(staffId) &&
+                    incoming().keys().hasAll(['name', 'phone', 'nationalId', 'address', 'salary', 'createdAt']) &&
+                    incoming().name is string && incoming().name.size() <= 100 &&
+                    incoming().phone is string && incoming().phone.size() <= 20 &&
+                    incoming().nationalId is string && incoming().nationalId.size() <= 50 &&
+                    incoming().address is string && incoming().address.size() <= 200 &&
+                    incoming().salary is number &&
+                    incoming().createdAt is string;
+      allow update: if isAdmin() && isValidId(staffId) &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['name', 'phone', 'nationalId', 'address', 'salary']) &&
+                    incoming().name is string && incoming().name.size() <= 100 &&
+                    incoming().phone is string && incoming().phone.size() <= 20 &&
+                    incoming().nationalId is string && incoming().nationalId.size() <= 50 &&
+                    incoming().address is string && incoming().address.size() <= 200 &&
+                    incoming().salary is number;
+      allow delete: if isAdmin() && isValidId(staffId);
+    }
+
+    // Volunteers
+    match /volunteers/{volunteerId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin() && isValidId(volunteerId) &&
+                    incoming().keys().hasAll(['name', 'phone', 'nationalId', 'address', 'createdAt']) &&
+                    incoming().name is string && incoming().name.size() <= 100 &&
+                    incoming().phone is string && incoming().phone.size() <= 20 &&
+                    incoming().nationalId is string && incoming().nationalId.size() <= 50 &&
+                    incoming().address is string && incoming().address.size() <= 200 &&
+                    incoming().createdAt is string;
+      allow update: if isAdmin() && isValidId(volunteerId) &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['name', 'phone', 'nationalId', 'address']) &&
+                    incoming().name is string && incoming().name.size() <= 100 &&
+                    incoming().phone is string && incoming().phone.size() <= 20 &&
+                    incoming().nationalId is string && incoming().nationalId.size() <= 50 &&
+                    incoming().address is string && incoming().address.size() <= 200;
+      allow delete: if isAdmin() && isValidId(volunteerId);
+    }
+  }
+}

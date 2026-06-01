@@ -1,0 +1,6 @@
+{
+  "name": "Clinic Management System",
+  "description": "A clinic management system tracking patients, finances, staff, and volunteers, built with Firebase authentication and Firestore.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
