@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, NavLink } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate, NavLink } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import {
   onAuthStateChanged,
@@ -114,7 +114,7 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
         {/* Mobile sidebar overlay */}
         {sidebarOpen && (
@@ -236,7 +236,7 @@ function App() {
           </div>
         </main>
       </div>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
