@@ -6,11 +6,12 @@ import {
   doc,
   setDoc,
   deleteDoc,
+  getDocs,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { handleFirestoreError } from "../lib/utils";
 import { OperationType } from "../lib/types";
-import { Plus, X, Trash2, Key } from "lucide-react";
+import { Plus, X, Trash2, Key, ShieldAlert, RefreshCw, CheckCircle2 } from "lucide-react";
 import { useLanguage } from "../lib/LanguageContext";
 
 interface AdminType {
@@ -23,6 +24,12 @@ export default function AdminSettings() {
   const [admins, setAdmins] = useState<AdminType[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { t } = useLanguage();
+
+  // Reset values state
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetConfirm, setResetConfirm] = useState("");
+  const [resetStatus, setResetStatus] = useState<{ type: "success" | "error" | ""; message: string }>({ type: "", message: "" });
+  const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
     const unsub = onSnapshot(
@@ -49,6 +56,75 @@ export default function AdminSettings() {
     }
   };
 
+  const handleResetAllData = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetStatus({ type: "", message: "" });
+
+    const pwd = resetPassword.trim().toLowerCase();
+    const conf = resetConfirm.trim().toLowerCase();
+
+    if (pwd !== "reset") {
+      setResetStatus({
+        type: "error",
+        message: t("Incorrect password. The password must be 'reset'.", "ভুল পাসওয়ার্ড। পাসওয়ার্ড অবশ্যই 'reset' হতে হবে।"),
+      });
+      return;
+    }
+
+    if (conf !== "reset") {
+      setResetStatus({
+        type: "error",
+        message: t("Confirmation mismatch. You must write 'reset' to confirm.", "নিশ্চিতকরণের অমিল। নিশ্চিত করতে আপনাকে অবশ্যই 'reset' লিখতে হবে।"),
+      });
+      return;
+    }
+
+    const firstConfirm = confirm(t(
+      "Are you absolutely sure you want to proceed? This will permanently delete all records of Patients, Financial logs, Staff, and Volunteers, resetting all totals and the balance sheet to zero. This action cannot be revoked!",
+      "আপনি কি নিশ্চিতভাবে এগিয়ে যেতে চান? এটি রোগী, আর্থিক লগ, কর্মী এবং স্বেচ্ছাসেবীদের সমস্ত রেকর্ড স্থায়ীভাবে ডিলিট করে দেবে এবং ব্যালেন্স শিট সহ সব হিসাব শূন্যে রিসেট করবে। এই প্রক্রিয়া আর ফিরিয়ে আনা যাবে না!"
+    ));
+
+    if (!firstConfirm) return;
+
+    const secondConfirm = confirm(t(
+      "FINAL CONFIRMATION: Double check your choice. Click OK to wipe out all data.",
+      "চূড়ান্ত নিশ্চিতকরণ: আপনার সিদ্ধান্তটি আবার যাচাই করুন। সব ডাটা মুছে ফেলতে OK ক্লিক করুন।"
+    ));
+
+    if (!secondConfirm) return;
+
+    setIsResetting(true);
+    try {
+      const collectionsToReset = ["patients", "finances", "staff", "volunteers"];
+      let deletedCount = 0;
+
+      for (const colName of collectionsToReset) {
+        const querySnapshot = await getDocs(collection(db, colName));
+        for (const docSnapshot of querySnapshot.docs) {
+          await deleteDoc(doc(db, colName, docSnapshot.id));
+          deletedCount++;
+        }
+      }
+
+      setResetStatus({
+        type: "success",
+        message: t(
+          `Successfully reset all values to zero! Deleted ${deletedCount} records across all modules.`,
+          `সাফল্যের সাথে সব মান শূন্যে রিসেট করা হয়েছে! মোট ${deletedCount}-টি রেকর্ড মুছে ফেলা হয়েছে।`
+        ),
+      });
+      setResetPassword("");
+      setResetConfirm("");
+    } catch (err: any) {
+      setResetStatus({
+        type: "error",
+        message: err.message || "An error occurred during reset.",
+      });
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
       {/* Header */}
@@ -67,7 +143,8 @@ export default function AdminSettings() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-4 md:p-8">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8">
+        {/* Admin Management Section */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col max-w-7xl mx-auto">
           <div className="p-4 bg-blue-50/50 border-b border-blue-100 flex items-center text-blue-800 text-sm">
             <Key size={16} className="mr-2 shrink-0" />
@@ -119,6 +196,79 @@ export default function AdminSettings() {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        {/* Danger Zone: Reset Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-red-200 overflow-hidden flex flex-col max-w-7xl mx-auto">
+          <div className="p-4 bg-red-50/50 border-b border-red-100 flex items-center text-red-800 text-sm font-semibold">
+            <ShieldAlert size={18} className="mr-2 text-red-600 shrink-0" />
+            <span>{t("Danger Zone: Permanent Reset", "বিপদজনক অঞ্চল: স্থায়ী রিসেট")}</span>
+          </div>
+          
+          <div className="p-6 space-y-6">
+            <p className="text-sm text-slate-600 leading-relaxed md:w-3/4">
+              {t(
+                "Use this feature to reset all balances, logs, patients, staff members, and volunteers back to zero. Once triggered, all data in these collections will be instantly and permanently wiped out from the live system. Only administrators can perform this action.",
+                "সেন্টারের ব্যালেন্স শিট, সাম্প্রতিক আর্থিক ট্রানজেকশন লগ, রোগী, কর্মী এবং স্বেচ্ছাসেবকদের সমস্ত রেকর্ড মুছে শুন্যে নামিয়ে আনতে এই অপশনটি ব্যবহার করুন। এই প্রক্রিয়া নিশ্চিত করার সাথে সাথে পুরো লাইভ সিস্টেমের সমস্ত ডাটা চিরতরে মুছে যাবে।"
+              )}
+            </p>
+
+            <form onSubmit={handleResetAllData} className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
+              <div>
+                <label className="block text-slate-700 text-xs font-bold uppercase tracking-wide mb-2">
+                  {t("Step 1: Write Password ('reset')", "ধাপ ১: পাসওয়ার্ডটি লিখুন ('reset')")}
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder='reset'
+                  value={resetPassword}
+                  onChange={(e) => setResetPassword(e.target.value)}
+                  className="w-full p-2.5 border border-slate-200 bg-slate-50 focus:bg-white focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none text-sm text-slate-800 rounded-md transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 text-xs font-bold uppercase tracking-wide mb-2">
+                  {t("Step 2: Confirm by writing 'reset' again", "ধাপ ২: নিশ্চিতকরণ শব্দ 'reset' পুনরায় লিখুন")}
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder='reset'
+                  value={resetConfirm}
+                  onChange={(e) => setResetConfirm(e.target.value)}
+                  className="w-full p-2.5 border border-slate-200 bg-slate-50 focus:bg-white focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none text-sm text-slate-800 rounded-md transition"
+                />
+              </div>
+
+              {resetStatus.message && (
+                <div className={`md:col-span-2 p-4 rounded-lg flex items-center gap-3 text-sm border ${
+                  resetStatus.type === "success" 
+                    ? "bg-green-50 text-green-800 border-green-100" 
+                    : "bg-red-50 text-red-800 border-red-100"
+                }`}>
+                  {resetStatus.type === "success" ? (
+                    <CheckCircle2 className="text-green-600 shrink-0" size={18} />
+                  ) : (
+                    <ShieldAlert className="text-red-600 shrink-0" size={18} />
+                  )}
+                  <span>{resetStatus.message}</span>
+                </div>
+              )}
+
+              <div className="md:col-span-2 pt-2 border-t border-slate-100 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={isResetting || !resetPassword || !resetConfirm}
+                  className="bg-red-600 hover:bg-red-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed hover:shadow-md text-white font-semibold flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm transition cursor-pointer"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isResetting ? 'animate-spin' : ''}`} />
+                  <span>{isResetting ? t("Executing Reset...", "রিসেট হচ্ছে...") : t("Reset All Values to Zero", "সব রেকর্ড শূন্যে রিসেট করুন")}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
